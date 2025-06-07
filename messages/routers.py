@@ -4,12 +4,18 @@ from sqlmodel import Session
 from db import get_session
 from messages.crud import create_message, get_message_by_id
 from messages.models import Message
+from users.dependencies import get_current_user
+from users.models import User
 
 router = APIRouter(prefix="/messages")
 
 
 @router.post("/", response_model=Message)
-def create_msg(msg: Message, session: Session = Depends(get_session)):
+def create_msg(
+    msg: Message,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
     db_msg = get_message_by_id(session, msg.message_id)
     if db_msg:
         raise HTTPException(status_code=400, detail="Message already exists")
