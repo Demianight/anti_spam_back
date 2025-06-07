@@ -44,7 +44,7 @@ def update_message(session: Session, message_id: int, **kwargs) -> Message | Non
 
 
 def get_unprocessed_messages(session: Session) -> Sequence[Message]:
-    return session.exec(select(Message).where(not Message.is_proccesed)).all()
+    return session.exec(select(Message).where(Message.is_proccesed != True)).all()
 
 
 def process_message(session: Session, message_id: int):
