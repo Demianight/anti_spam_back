@@ -2,7 +2,7 @@ from typing import Sequence
 
 from sqlmodel import Session, select
 
-from models import Message
+from messages.models import Message
 
 
 def create_message(session: Session, message: Message) -> Message:
