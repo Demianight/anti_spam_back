@@ -2,7 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 
 from db import get_session
-from messages.crud import create_message, get_message_by_id
+from messages.crud import (
+    create_message,
+    get_message_by_id,
+    get_unprocessed_messages,
+    process_message,
+)
 from messages.models import Message
 from users.dependencies import get_current_user
 from users.models import User
@@ -28,3 +33,13 @@ def get_msg(message_id: int, session: Session = Depends(get_session)):
     if not msg:
         raise HTTPException(status_code=404, detail="Message not found")
     return msg
+
+
+@router.get("/unprocessed", response_model=list[Message])
+def get_unproc(session: Session = Depends(get_session)):
+    return get_unprocessed_messages(session)
+
+
+@router.post("/{message_id}/process", response_model=Message)
+def process(message_id: int, session: Session = Depends(get_session)):
+    return process_message(session, message_id)

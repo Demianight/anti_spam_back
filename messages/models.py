@@ -14,3 +14,4 @@ class Message(SQLModel, table=True):
     reply_to_message_id: int | None = None
 
     spam_score: float
+    is_proccesed: bool | None = None
