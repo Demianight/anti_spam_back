@@ -64,6 +64,6 @@ def get_unique_chat_ids_route(
 def get_user_spam_summary_route(
     last_n: int = 5,
     session: Session = Depends(get_session),
-    # _: User = Depends(get_current_user),
+    _: User = Depends(get_current_user),
 ):
     return get_user_spam_summary(session, last_n=last_n)
