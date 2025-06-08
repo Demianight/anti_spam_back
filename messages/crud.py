@@ -59,3 +59,11 @@ def process_message(session: Session, message_id: int):
     session.add(message)
     session.commit()
     return message
+
+
+def filter_messages_by_chat_id(session: Session, chat_id: int) -> Sequence[Message]:
+    return session.exec(select(Message).where(Message.chat_id == chat_id)).all()
+
+
+def get_unique_chat_ids(session: Session) -> Sequence[int | None]:
+    return session.exec(select(Message.chat_id).distinct()).all()
