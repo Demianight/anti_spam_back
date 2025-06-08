@@ -18,6 +18,16 @@ def get_message_by_id(session: Session, message_id: int) -> Message | None:
     return session.get(Message, message_id)
 
 
+def get_message_by_id_and_chat_id(
+    session: Session, chat_id: int, message_id: int
+) -> Message | None:
+    return session.exec(
+        select(Message).filter(
+            (Message.chat_id == chat_id) & (Message.message_id == message_id)
+        )
+    ).first()
+
+
 def get_all_messages(session: Session) -> Sequence[Message]:
     return session.exec(select(Message)).all()
 
@@ -53,8 +63,8 @@ def get_unprocessed_messages(session: Session) -> Sequence[Message]:
     ).all()
 
 
-def process_message(session: Session, message_id: int, is_spam: bool):
-    message = get_message_by_id(session, message_id)
+def process_message(session: Session, chat_id: int, message_id: int, is_spam: bool):
+    message = get_message_by_id_and_chat_id(session, chat_id, message_id)
     if not message:
         return None
     if is_spam:

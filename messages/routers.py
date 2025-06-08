@@ -43,14 +43,15 @@ def get_unprocessed_route(
     return get_unprocessed_messages(session)
 
 
-@router.post("/{message_id}/process", response_model=Message)
+@router.post("/{chat_id}/{message_id}/process", response_model=Message)
 def process_route(
+    chat_id: int,
     message_id: int,
     is_spam: bool = False,
     session: Session = Depends(get_session),
     _: User = Depends(get_current_user),
 ):
-    return process_message(session, message_id, is_spam)
+    return process_message(session, chat_id, message_id, is_spam)
 
 
 @router.get("/unique_chat_ids", response_model=list[int])
