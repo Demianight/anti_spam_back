@@ -4,6 +4,7 @@ from typing import Any, Sequence
 from sqlmodel import Session, select
 
 from messages.models import Message
+from messages.producer import send_message_to_kafka
 
 
 def create_message(session: Session, message: Message) -> Message:
@@ -52,13 +53,16 @@ def get_unprocessed_messages(session: Session) -> Sequence[Message]:
     ).all()
 
 
-def process_message(session: Session, message_id: int):
+def process_message(session: Session, message_id: int, is_spam: bool):
     message = get_message_by_id(session, message_id)
     if not message:
         return None
+    if is_spam:
+        send_message_to_kafka(message.model_dump())
     message.is_proccesed = True
     session.add(message)
     session.commit()
+
     return message
 
 
