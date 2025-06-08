@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 
@@ -8,6 +10,7 @@ from messages.crud import (
     get_message_by_id,
     get_unique_chat_ids,
     get_unprocessed_messages,
+    get_user_spam_summary,
     process_message,
 )
 from messages.models import Message
@@ -20,8 +23,8 @@ router = APIRouter(prefix="/messages")
 @router.post("/", response_model=Message)
 def create_message_route(
     msg: Message,
-    user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
+    _: User = Depends(get_current_user),
 ):
     db_msg = get_message_by_id(session, msg.message_id)
     if db_msg:
@@ -32,8 +35,8 @@ def create_message_route(
 @router.get("/unprocessed", response_model=list[Message])
 def get_unprocessed_route(
     chat_id: int | None = None,
-    user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
+    _: User = Depends(get_current_user),
 ):
     if chat_id is not None:
         return filter_messages_by_chat_id(session, chat_id)
@@ -43,15 +46,24 @@ def get_unprocessed_route(
 @router.post("/{message_id}/process", response_model=Message)
 def process_route(
     message_id: int,
-    user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
+    _: User = Depends(get_current_user),
 ):
     return process_message(session, message_id)
 
 
 @router.get("/unique_chat_ids", response_model=list[int])
 def get_unique_chat_ids_route(
-    user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
+    _: User = Depends(get_current_user),
 ):
     return get_unique_chat_ids(session)
+
+
+@router.get("/user_spam_summary", response_model=list[dict[str, Any]])
+def get_user_spam_summary_route(
+    last_n: int = 5,
+    session: Session = Depends(get_session),
+    # _: User = Depends(get_current_user),
+):
+    return get_user_spam_summary(session, last_n=last_n)

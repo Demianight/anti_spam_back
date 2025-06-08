@@ -1,4 +1,5 @@
-from typing import Sequence
+from collections import defaultdict
+from typing import Any, Sequence
 
 from sqlmodel import Session, select
 
@@ -67,3 +68,22 @@ def filter_messages_by_chat_id(session: Session, chat_id: int) -> Sequence[Messa
 
 def get_unique_chat_ids(session: Session) -> Sequence[int | None]:
     return session.exec(select(Message.chat_id).distinct()).all()
+
+
+def get_user_spam_summary(session: Session, last_n: int = 5) -> list[dict[str, Any]]:
+    # Get all messages ordered by user_id and descending date
+    statement = select(Message).order_by(Message.user_id, Message.date.desc())
+    messages = session.exec(statement).all()
+
+    user_data = defaultdict(
+        lambda: {"username": None, "spam_score": 0.0, "last_messages": []}
+    )
+
+    for msg in messages:
+        data = user_data[msg.user_id]
+        data["username"] = msg.user_username
+        data["spam_score"] += msg.spam_score
+        if len(data["last_messages"]) < last_n:
+            data["last_messages"].append(msg.text)
+
+    return list(user_data.values())
