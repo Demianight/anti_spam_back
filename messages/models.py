@@ -15,6 +15,6 @@ class Message(SQLModel, table=True):
     user_last_name: str | None = None
     text: str | None = None
 
-    is_proccesed: bool | None = False
+    is_processed: bool | None = False
 
     spam_score: float

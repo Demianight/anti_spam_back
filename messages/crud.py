@@ -58,18 +58,20 @@ def update_message(session: Session, message_id: int, **kwargs) -> Message | Non
 def get_unprocessed_messages(session: Session) -> Sequence[Message]:
     return session.exec(
         select(Message).where(
-            (Message.is_proccesed == None) | (Message.is_proccesed == False)
+            (Message.is_processed == None) | (Message.is_processed == False)
         )
     ).all()
 
 
-def process_message(session: Session, chat_id: int, message_id: int, is_spam: bool):
+async def process_message(
+    session: Session, chat_id: int, message_id: int, is_spam: bool
+):
     message = get_message_by_id_and_chat_id(session, chat_id, message_id)
     if not message:
         return None
     if is_spam:
-        send_message_to_kafka(message.model_dump())
-    message.is_proccesed = True
+        await send_message_to_kafka(message.model_dump())
+    message.is_processed = True
     session.add(message)
     session.commit()
 

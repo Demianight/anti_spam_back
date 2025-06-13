@@ -1,20 +1,38 @@
 import json
 from logging import getLogger
 
-from quixstreams import Application
+from aiokafka import AIOKafkaProducer
+
+from config import KAFKA_BROKER
 
 logger = getLogger(__name__)
 logger.setLevel("DEBUG")
 
-kafka = Application(
-    broker_address="10.10.127.2:9092",
-)
+producer: AIOKafkaProducer | None = None
 
 
-def send_message_to_kafka(message_dict: dict, topic: str = "spam_messages"):
-    with kafka.get_producer() as producer:
-        producer.produce(
-            topic=topic,
-            value=json.dumps(message_dict),
+async def start_kafka_producer():
+    global producer
+    if producer is not None:
+        logger.debug(
+            "Kafka producer already started, stopping it before starting again"
         )
+        await producer.stop()
+    producer = AIOKafkaProducer(bootstrap_servers=KAFKA_BROKER)
+    await producer.start()
+    logger.debug("Kafka producer started")
+
+
+async def stop_kafka_producer():
+    global producer
+    if producer is not None:
+        await producer.stop()
+        logger.debug("Kafka producer stopped")
+
+
+async def send_message_to_kafka(message_dict: dict, topic: str = "spam_messages"):
+    if producer is None:
+        raise RuntimeError("Kafka producer is not started")
+    value = json.dumps(message_dict).encode("utf-8")
+    await producer.send_and_wait(topic, value=value)
     logger.debug(f"Produced message to Kafka: {message_dict}")
